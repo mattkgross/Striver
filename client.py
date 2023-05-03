@@ -8,9 +8,10 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # Make sure the
 # If you haven't already authorized your app, do so by following this URL:
 # https://www.strava.com/oauth/authorize?client_id=your_client_id&redirect_uri=http://localhost&response_type=code&scope=read_all,profile:read_all,activity:read_all
-class StravaHttpClient:
+class StravaHttpClient():
   authUrl = "https://www.strava.com/oauth/token"
-  activitiesEndpoint = "https://www.strava.com/api/v3/athlete/activities"
+  getLastActivityEndpoint = "https://www.strava.com/api/v3/athlete/activities"
+  getActivityEndpoint = "https://www.strava.com/api/v3/activities/"
 
   def __init__(self):
     self.__GetConfig()
@@ -70,6 +71,7 @@ class StravaHttpClient:
       raise e
     else:
       print ("Auth token acquired.")
+      #print (self.__access_token)
 
   def _Get(self, url: str, params) -> Any:
     # If we're within 10 minutes of access expiration, refresh.
@@ -83,6 +85,12 @@ class StravaHttpClient:
   def GetLastActivity(self) -> Any:
     params = {"per_page": 1, 'page': 1}
 
-    # Make the API request
-    activities = self._Get(self.activitiesEndpoint, params)
-    return activities[0] if activities else None
+    # Make the API request.
+    activities = self._Get(self.getLastActivityEndpoint, params)
+    activity = activities[0] if activities else None
+
+    if activity is None:
+      return None
+
+    # Get the full details.
+    return self._Get(self.getActivityEndpoint + str(activity["id"]), None)
