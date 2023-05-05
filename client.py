@@ -10,8 +10,12 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # https://www.strava.com/oauth/authorize?client_id=your_client_id&redirect_uri=http://localhost&response_type=code&scope=read_all,profile:read_all,activity:read_all
 class StravaHttpClient():
   authUrl = "https://www.strava.com/oauth/token"
+  # GET
   getLastActivityEndpoint = "https://www.strava.com/api/v3/athlete/activities"
+  # GET
   getActivityEndpoint = "https://www.strava.com/api/v3/activities/"
+  # PUT
+  updateActivityEndpoint = "https://www.strava.com/api/v3/activities/"
 
   def __init__(self):
     self.__GetConfig()
@@ -71,7 +75,7 @@ class StravaHttpClient():
       raise e
     else:
       print ("Auth token acquired.")
-      #print (self.__access_token)
+      print (self.__access_token)
 
   def _Get(self, url: str, params) -> Any:
     # If we're within 10 minutes of access expiration, refresh.
@@ -81,6 +85,15 @@ class StravaHttpClient():
 
     header = {'Authorization': 'Bearer ' + self.__access_token}
     return requests.get(url, headers=header, params=params).json()
+
+  def _Put(self, url: str, jsonBody: str):
+    # If we're within 10 minutes of access expiration, refresh.
+    if self.__accessExpirationUtc < (round(time.time()) - 600):
+      print("Access token almost stale. Refreshing...")
+      self._Authorize()
+
+    header = {'Authorization': 'Bearer ' + self.__access_token}
+    return requests.put(url, headers=header, json=jsonBody)
 
   def GetLastActivity(self) -> Any:
     params = {"per_page": 1, 'page': 1}
@@ -93,4 +106,8 @@ class StravaHttpClient():
       return None
 
     # Get the full details.
-    return self._Get(self.getActivityEndpoint + str(activity["id"]), None)
+    return self._Get(self.getActivityEndpoint + str(activity["id"]), params)
+
+  def RemoveHeartRate(self, activityId: int) -> Any:
+    hideHr = "{'heartrate_opt_out': true}"
+    return self._Put(self.updateActivityEndpoint + str(activityId), hideHr)
