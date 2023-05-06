@@ -1,8 +1,8 @@
 # This file contains all feature switches for the Strider application.
 
 # Hides your latest activity's heart rate data (you can still see it).
-RunLastActivityHideHr: bool = True
+RUN_LAST_ACTIVITY_HIDE_HR: bool = True
 # If your latest activity has no description, fill it with a random quote.
-RunLastActivityAddQuote: bool = True
+RUN_LAST_ACTIVITY_ADD_QUOTE: bool = True
 # If you specified equipment defaults for activity types, updates your last activity's data accordingly.
-RunLastActivityEquipment: bool = True
+RUN_LAST_ACTIVITY_EQUIPMENT: bool = True

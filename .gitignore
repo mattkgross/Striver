@@ -1,5 +1,9 @@
-# Secrets
+# Configs
+equipment.py
 strava_auth.json
+
+# Logs
+striver.log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

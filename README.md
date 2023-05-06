@@ -27,6 +27,40 @@ This will redirect you back to localahost with a `code` param in the URL. Copy t
 
 **Remember, once you use a refresh token to generate a new auth/refresh token pair, it's no longer valid. So, if you do this elsewhere outside of this app, you'll need to update it accordingly here with the most recent refresh token. If you don't mess with things anywhere else, you'll be fine - this code will automatically generate and save refresh tokens for you after you've generated the first one.**
 
+## On Linux Startup
+You can configure this script to start on system boot for Linux systems with `systemctl` following these steps:
+
+1. `cd /etc/systemd/system`
+2. `sudo vim striver.service`
+3.
+```
+[Unit]
+Description=Strava Utilities Client
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /path/to/script/main.py
+WorkingDirectory=/path/to/script
+Restart=always
+RestartSec=10
+User=<your_username>
+
+[Install]
+WantedBy=default.target
+```
+4. `sudo systemctl daemon-reload`
+5. `sudo systemctl enable striver.service`
+6. `sudo systemctl start striver.service`
+
+To check the service status at any time, run: `sudo systemctl status striver.service`
+
+To restart the service after making changes, run : `sudo systemctl restart striver.service`
+
+## Logs
+To check server logs, run: `tail striver.log -n 50`
+
+To check systemctl logs, run: `sudo journalctl -u striver.service -n 50`
+
 # Features
 You can toggle features within `config/feature_switches.py`.
 
@@ -37,10 +71,12 @@ Hides your latest activity's heart rate data (you can still see it).
 If your latest activity has no description, fill it with a random quote.
 
 ## Equipment Select
-If you specified equipment defaults for activity types, updates your last activity's data accordingly. Map equipment in `config/equipment.json` - you'll need to lookup your gear IDs. It should look something like this:
+If you specified equipment defaults for activity types, updates your last activity's data accordingly.
+
+Map equipment in `config/equipment.py` - you'll need to lookup your gear IDs. It should look something like this:
 
 ```
-{
+EquipmentMap = {
   "gear":
   {
     "hiking_shoes": "g10352053",
@@ -56,3 +92,5 @@ If you specified equipment defaults for activity types, updates your last activi
   }
 }
 ```
+
+Give each of your gear an nickname as it's key in `gear`. Then, specify which piece of gear should be the default for a particular activity sport type in `sportTypes`.

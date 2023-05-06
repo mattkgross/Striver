@@ -1,17 +1,20 @@
 import json
+import logging
 import time
 from typing import *
 import requests
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+_logger = logging.getLogger(__name__)
+
 class StravaHttpClient():
   """An HTTP client to make requests to the Strava API."""
 
-  AuthUrl: str = "https://www.strava.com/oauth/token"
-  GetActivityEndpoint: str = "https://www.strava.com/api/v3/activities/"
-  GetLastActivityEndpoint: str = "https://www.strava.com/api/v3/athlete/activities"
-  UpdateActivityEndpoint: str = "https://www.strava.com/api/v3/activities/"
+  __AUTH_URL: str = "https://www.strava.com/oauth/token"
+  __GET_ACTIVITY_URL: str = "https://www.strava.com/api/v3/activities/"
+  __GET_LAST_ACTIVITY_URL: str = "https://www.strava.com/api/v3/athlete/activities"
+  __UPDATE_ACTIVITY_URL: str = "https://www.strava.com/api/v3/activities/"
 
   def __init__(self):
     self.__config: dict[str, Any] = {}
@@ -35,10 +38,10 @@ class StravaHttpClient():
         self.__clientSecret = self.__config["clientSecret"]
         self.__refreshToken = self.__config["refreshToken"]
     except Exception as e:
-      print("Credentials failed to load!")
+      _logger.error("Credentials failed to load!")
       raise e
     else:
-      print("Credentials loaded.")
+      _logger.debug("Credentials loaded.")
 
   def __SetRefreshToken(self) -> None:
     """Persists the current refresh token to `config/strava_auth.json`."""
@@ -48,9 +51,9 @@ class StravaHttpClient():
       with open("config/strava_auth.json", "w") as creds:
         json.dump(self.__config, creds)
     except Exception as e:
-      print("Failed to write refresh token!")
+      _logger.warning("Failed to write refresh token!")
     else:
-      print("Refresh token saved.")
+      _logger.debug("Refresh token saved.")
 
   def _Authorize(self, refresh: bool = True) -> None:
     """
@@ -72,8 +75,8 @@ class StravaHttpClient():
       'f': 'json'
     }
 
-    print("Requesting Auth Token...")
-    res = requests.post(self.AuthUrl, data=payload, verify=False).json()
+    _logger.info("Requesting Auth Token...")
+    res = requests.post(self.__AUTH_URL, data=payload, verify=False).json()
 
     try:
       self.__access_token = res["access_token"]
@@ -82,13 +85,12 @@ class StravaHttpClient():
 
       self.__SetRefreshToken()
     except Exception as e:
-      print("No access token returned. Subsequent calls will fail.")
+      _logger.warning("No access token returned. Subsequent calls will fail.")
       # Force a retry on the next call.
       self.__accessExpirationUtc = 0
     else:
-      print ("Auth token acquired.")
-      # For debug.
-      print (self.__access_token)
+      _logger.debug ("Auth token acquired.")
+      _logger.debug (self.__access_token)
 
   def _Get(self, url: str, params) -> Any:
     """
@@ -132,14 +134,14 @@ class StravaHttpClient():
     params = {"per_page": 1, 'page': 1}
 
     # Make the API request.
-    activities = self._Get(self.GetLastActivityEndpoint, params)
+    activities = self._Get(self.__GET_LAST_ACTIVITY_URL, params)
     activity = activities[0] if activities else None
 
     if activity is None:
       return None
 
     # Get the full details.
-    return self._Get(self.GetActivityEndpoint + str(activity["id"]), params)
+    return self._Get(self.__GET_ACTIVITY_URL + str(activity["id"]), params)
 
   def UpdateActivity(self, activityId: int, body: dict[str, Any]) -> Any:
     """
@@ -152,4 +154,4 @@ class StravaHttpClient():
     Returns:
       Any: The HTTP response.
     """
-    return self._Put(self.UpdateActivityEndpoint + str(activityId), body)
+    return self._Put(self.__UPDATE_ACTIVITY_URL + str(activityId), body)

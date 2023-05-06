@@ -1,11 +1,18 @@
-import json
+import logging
+import logging.handlers
 import time
 from clients.quote_client import QuoteHttpClient
 from clients.strava_client import StravaHttpClient
+from config.equipment import *
 from config.feature_switches import *
+from config.logging import *
 from typing import *
 
+_logger = logging.getLogger(__name__)
+
 def main():
+  __SetupLogs()
+
   stravaClient: StravaHttpClient = StravaHttpClient()
   quoteClient: QuoteHttpClient = QuoteHttpClient()
   lastActivityUpdatedId: int = 0
@@ -15,80 +22,80 @@ def main():
     activity: Any = stravaClient.GetLastActivity()
 
     if activity is None:
-      print("No activity was found. Skipping...")
+      _logger.warning("No activity was found. Skipping...")
       time.sleep(60)
       continue
 
-    activityId: int = activity["id"]
-
-    if activityId != lastActivityUpdatedId:
-      hrCmd: dict[str, str] = {}
-      quoteCmd: dict[str, str] = {}
-      equipmentCmd: dict[str, str] = {}
-      cmd: dict[str, Any] = {}
-
-      if RunLastActivityHideHr:
-        hrCmd = { "heartrate_opt_out": True }
-      if RunLastActivityAddQuote:
-        quoteCmd = LastActivityAddQuoteCmd(stravaClient, quoteClient, activity)
-      if RunLastActivityEquipment:
-        equipmentCmd = LastActivityAddEquipmentCmd(stravaClient, activity)
-
-      cmd.update(hrCmd)
-      cmd.update(quoteCmd)
-      cmd.update(equipmentCmd)
-
-      # If any command keys are present, send the update.
-      if bool(cmd):
-        res = stravaClient.UpdateActivity(activityId, cmd)
-
-        if res.status_code == 200:
-          if bool(hrCmd):
-            print(f"HR hidden for AcivityId {activity['id']}: {activity['name']} @ {activity['start_date_local']}")
-          if bool(quoteCmd):
-            print(f"Quote assigned to activity {activity['id']}.")
-          if bool(equipmentCmd):
-            print(f"Gear updated for activity {activity['id']}.")
-        else:
-          if bool(hrCmd):
-            print("Failed to hide HR for AcivityId {activity['id']}: {activity['name']} @ {activity['start_date_local']}")
-          if bool(quoteCmd):
-            print(f"Failed to assign quote to activity {activity['id']}.")
-          if bool(equipmentCmd):
-            print(f"Failed to update gear for activity {activity['id']}.")
-
-      lastActivityUpdatedId = activityId
+    # Perform operations on the last activity registered.
+    lastActivityUpdatedId = UpdateLastActivity(activity, stravaClient, quoteClient, lastActivityUpdatedId)
 
     # Wait for a minute before checking for new data.
     time.sleep(60)
 
-def LastActivityAddQuoteCmd(sClient: StravaHttpClient, qClient: QuoteHttpClient, activity: Any) -> dict[str, str]:
+def UpdateLastActivity(activity: Any, stravaClient: StravaHttpClient, quoteClient: QuoteHttpClient, lastActivityUpdatedId: int) -> int:
+  activityId: int = activity["id"]
+
+  if activityId != lastActivityUpdatedId:
+    hrCmd: dict[str, str] = {}
+    quoteCmd: dict[str, str] = {}
+    equipmentCmd: dict[str, str] = {}
+    cmd: dict[str, Any] = {}
+
+    if RUN_LAST_ACTIVITY_HIDE_HR:
+      hrCmd = { "heartrate_opt_out": True }
+    if RUN_LAST_ACTIVITY_ADD_QUOTE:
+      quoteCmd = __LastActivityAddQuoteCmd(stravaClient, quoteClient, activity)
+    if RUN_LAST_ACTIVITY_EQUIPMENT:
+      equipmentCmd = __LastActivityAddEquipmentCmd(stravaClient, activity)
+
+    cmd.update(hrCmd)
+    cmd.update(quoteCmd)
+    cmd.update(equipmentCmd)
+
+    # If any command keys are present, send the update.
+    if bool(cmd):
+      res = stravaClient.UpdateActivity(activityId, cmd)
+
+      if res.status_code == 200:
+        if bool(hrCmd):
+          _logger.info(f"HR hidden for AcivityId {activity['id']}: {activity['name']} @ {activity['start_date_local']}")
+        if bool(quoteCmd):
+          _logger.info(f"Quote assigned to activity {activity['id']}.")
+        if bool(equipmentCmd):
+          _logger.info(f"Gear updated for activity {activity['id']}.")
+      else:
+        if bool(hrCmd):
+          _logger.warning("Failed to hide HR for AcivityId {activity['id']}: {activity['name']} @ {activity['start_date_local']}")
+        if bool(quoteCmd):
+          _logger.warning(f"Failed to assign quote to activity {activity['id']}.")
+        if bool(equipmentCmd):
+          _logger.warning(f"Failed to update gear for activity {activity['id']}.")
+
+    return activityId
+
+def __LastActivityAddQuoteCmd(sClient: StravaHttpClient, qClient: QuoteHttpClient, activity: Any) -> dict[str, str]:
   if activity["description"] is None:
     try:
       quote = qClient.GetRandomQuote()
       quoteText = f"{quote['content']}\n - {quote['author']}"
       return { "description": quoteText }
     except Exception as e:
-      print("Failed to retrieve quote.")
+      _logger.warning("Failed to retrieve quote.")
 
   return {}
 
-def LastActivityAddEquipmentCmd(client: StravaHttpClient, activity: Any) -> dict[str, str]:
-  gearDict = None
-
-  try:
-    with open("config/equipment.json", "r") as equipment:
-      gearDict = json.load(equipment)
-  except Exception as e:
-    print("Failed to read equipment list.")
-    return {}
-
+def __LastActivityAddEquipmentCmd(client: StravaHttpClient, activity: Any) -> dict[str, str]:
   # If the activity is a type we have default gear for, then we set the gear.
-  if activity["sport_type"] in gearDict["sportTypes"]:
-    gearId = gearDict["gear"][gearDict["sportTypes"][activity["sport_type"]]]
+  if activity["sport_type"] in EquipmentMap["sportTypes"]:
+    gearId = EquipmentMap["gear"][EquipmentMap["sportTypes"][activity["sport_type"]]]
     return { "gear_id": gearId }
 
   return {}
+
+def __SetupLogs() -> None:
+  handler = logging.handlers.RotatingFileHandler('striver.log', maxBytes=100_000, backupCount=1)
+  handler.setFormatter(logging.Formatter('{asctime} {levelname} {name} {filename}:{lineno} {message}', style='{'))
+  logging.basicConfig(handlers=[handler], level=logging.getLevelName(LOG_LEVEL))
 
 if __name__ == "__main__":
   main()
