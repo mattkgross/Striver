@@ -89,7 +89,7 @@ class StravaHttpClient():
       # Force a retry on the next call.
       self.__accessExpirationUtc = 0
     else:
-      _logger.debug ("Auth token acquired.")
+      _logger.info ("Auth token acquired.")
       _logger.debug (self.__access_token)
 
   def _Get(self, url: str, params) -> Any:
