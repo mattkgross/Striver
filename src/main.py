@@ -26,52 +26,52 @@ def main():
       time.sleep(60)
       continue
 
+    activityId = activity["id"]
+
     # Perform operations on the last activity registered.
-    lastActivityUpdatedId = UpdateLastActivity(activity, stravaClient, quoteClient, lastActivityUpdatedId)
+    if activityId != lastActivityUpdatedId:
+      UpdateLastActivity(activity, stravaClient, quoteClient)
+      lastActivityUpdatedId = activityId
 
     # Wait for a minute before checking for new data.
     time.sleep(60)
 
-def UpdateLastActivity(activity: Any, stravaClient: StravaHttpClient, quoteClient: QuoteHttpClient, lastActivityUpdatedId: int) -> int:
+def UpdateLastActivity(activity: Any, stravaClient: StravaHttpClient, quoteClient: QuoteHttpClient) -> int:
+  hrCmd: dict[str, str] = {}
+  quoteCmd: dict[str, str] = {}
+  equipmentCmd: dict[str, str] = {}
+  cmd: dict[str, Any] = {}
   activityId: int = activity["id"]
 
-  if activityId != lastActivityUpdatedId:
-    hrCmd: dict[str, str] = {}
-    quoteCmd: dict[str, str] = {}
-    equipmentCmd: dict[str, str] = {}
-    cmd: dict[str, Any] = {}
+  if RUN_LAST_ACTIVITY_HIDE_HR:
+    hrCmd = { "heartrate_opt_out": True }
+  if RUN_LAST_ACTIVITY_ADD_QUOTE:
+    quoteCmd = __LastActivityAddQuoteCmd(stravaClient, quoteClient, activity)
+  if RUN_LAST_ACTIVITY_EQUIPMENT:
+    equipmentCmd = __LastActivityAddEquipmentCmd(stravaClient, activity)
 
-    if RUN_LAST_ACTIVITY_HIDE_HR:
-      hrCmd = { "heartrate_opt_out": True }
-    if RUN_LAST_ACTIVITY_ADD_QUOTE:
-      quoteCmd = __LastActivityAddQuoteCmd(stravaClient, quoteClient, activity)
-    if RUN_LAST_ACTIVITY_EQUIPMENT:
-      equipmentCmd = __LastActivityAddEquipmentCmd(stravaClient, activity)
+  cmd.update(hrCmd)
+  cmd.update(quoteCmd)
+  cmd.update(equipmentCmd)
 
-    cmd.update(hrCmd)
-    cmd.update(quoteCmd)
-    cmd.update(equipmentCmd)
+  # If any command keys are present, send the update.
+  if bool(cmd):
+    res = stravaClient.UpdateActivity(activityId, cmd)
 
-    # If any command keys are present, send the update.
-    if bool(cmd):
-      res = stravaClient.UpdateActivity(activityId, cmd)
-
-      if res.status_code == 200:
-        if bool(hrCmd):
-          _logger.info(f"HR hidden for AcivityId {activity['id']}: {activity['name']} @ {activity['start_date_local']}")
-        if bool(quoteCmd):
-          _logger.info(f"Quote assigned to activity {activity['id']}.")
-        if bool(equipmentCmd):
-          _logger.info(f"Gear updated for activity {activity['id']}.")
-      else:
-        if bool(hrCmd):
-          _logger.warning("Failed to hide HR for AcivityId {activity['id']}: {activity['name']} @ {activity['start_date_local']}")
-        if bool(quoteCmd):
-          _logger.warning(f"Failed to assign quote to activity {activity['id']}.")
-        if bool(equipmentCmd):
-          _logger.warning(f"Failed to update gear for activity {activity['id']}.")
-
-    return activityId
+    if res.status_code == 200:
+      if bool(hrCmd):
+        _logger.info(f"HR hidden for AcivityId {activity['id']}: {activity['name']} @ {activity['start_date_local']}")
+      if bool(quoteCmd):
+        _logger.info(f"Quote assigned to activity {activity['id']}.")
+      if bool(equipmentCmd):
+        _logger.info(f"Gear updated for activity {activity['id']}.")
+    else:
+      if bool(hrCmd):
+        _logger.warning("Failed to hide HR for AcivityId {activity['id']}: {activity['name']} @ {activity['start_date_local']}")
+      if bool(quoteCmd):
+        _logger.warning(f"Failed to assign quote to activity {activity['id']}.")
+      if bool(equipmentCmd):
+        _logger.warning(f"Failed to update gear for activity {activity['id']}.")
 
 def __LastActivityAddQuoteCmd(sClient: StravaHttpClient, qClient: QuoteHttpClient, activity: Any) -> dict[str, str]:
   if activity["description"] is None:
