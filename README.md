@@ -1,7 +1,7 @@
 > *A set of Strava utilities that you can run on a home server.*
 
 # Features
-You can toggle features within `config/feature_switches.py`.
+You can toggle features within `src/config/feature_switches.py`.
 
 ## Hide Latest Activity Heart Rate
 Hides your latest activity's heart rate data (you can still see it).
@@ -12,7 +12,7 @@ If your latest activity has no description, fill it with a random quote.
 ## Equipment Select
 If you specified equipment defaults for activity types, updates your last activity's data accordingly.
 
-Map equipment in `config/equipment.py` - you'll need to lookup your gear IDs. It should look something like this:
+Map equipment in `src/config/equipment.py` - you'll need to lookup your gear IDs. It should look something like this:
 
 ```
 EquipmentMap = {
@@ -66,17 +66,16 @@ This will redirect you back to localahost with a `code` param in the URL. Copy t
 ## On Linux Startup
 You can configure this script to start on system boot for Linux systems with `systemctl` following these steps:
 
-1. `cd /etc/systemd/system`
-2. `sudo vim striver.service`
-3.
+1. `sudo vim /etc/systemd/system/striver.service`
+2.
 ```
 [Unit]
 Description=Strava Utilities Client
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 /path/to/script/main.py
-WorkingDirectory=/path/to/script
+ExecStart=/usr/bin/python3 /path/to/repo/src/main.py
+WorkingDirectory=/path/to/repo/src
 Restart=always
 RestartSec=10
 User=<your_username>
@@ -84,15 +83,15 @@ User=<your_username>
 [Install]
 WantedBy=default.target
 ```
-4. `sudo systemctl daemon-reload`
-5. `sudo systemctl enable striver.service`
-6. `sudo systemctl start striver.service`
+3. `sudo systemctl daemon-reload`
+4. `sudo systemctl enable striver.service`
+5. `sudo systemctl start striver.service`
 
 To check the service status at any time, run: `sudo systemctl status striver.service`
 
 To restart the service after making changes, run : `sudo systemctl restart striver.service`
 
 ## Logs
-To check server logs, run: `tail striver.log -n 50`
+To check server logs, run: `tail src/striver.log -n 50`
 
 To check systemctl logs, run: `sudo journalctl -u striver.service -n 50`
