@@ -9,4 +9,4 @@ class QuoteHttpClient():
     pass
 
   def GetRandomQuote(self) -> Any:
-    return requests.get(self.apiUrl).json()
+    return requests.get(self.apiUrl).json()[0]

@@ -86,14 +86,14 @@ class StravaHttpClient():
     header = {'Authorization': 'Bearer ' + self.__access_token}
     return requests.get(url, headers=header, params=params).json()
 
-  def _Put(self, url: str, jsonBody: str):
+  def _Put(self, url: str, body: dict[str, Any]):
     # If we're within 10 minutes of access expiration, refresh.
     if self.__accessExpirationUtc < (round(time.time()) - 600):
       print("Access token almost stale. Refreshing...")
       self._Authorize()
 
     header = {'Authorization': 'Bearer ' + self.__access_token}
-    return requests.put(url, headers=header, json=jsonBody)
+    return requests.put(url, headers=header, json=body)
 
   def GetLastActivity(self) -> Any:
     params = {"per_page": 1, 'page': 1}
@@ -108,5 +108,5 @@ class StravaHttpClient():
     # Get the full details.
     return self._Get(self.getActivityEndpoint + str(activity["id"]), params)
 
-  def UpdateActivity(self, activityId: int, metadata: str) -> Any:
-    return self._Put(self.updateActivityEndpoint + str(activityId), metadata)
+  def UpdateActivity(self, activityId: int, body: dict[str, Any]) -> Any:
+    return self._Put(self.updateActivityEndpoint + str(activityId), body)

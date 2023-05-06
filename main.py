@@ -20,42 +20,58 @@ def main():
     activityId: int = activity["id"]
 
     if activityId != lastActivityUpdatedId:
-      # TODO: These can all be done with a single update call.
-      if RunLastActivityStripHr:
-        LastActivityStripHr(stravaClient, activity)
-      if RunLastActivityAddPoem:
-        LastActivityAddPoem(stravaClient, quoteClient, activity)
-      if RunLastActivityEquipment:
-        LastActivityEquipment(stravaClient, activity)
+      hrCmd = {}
+      quoteCmd = {}
+      equipmentCmd = {}
+      cmd = {}
 
-    lastActivityUpdatedId = activityId
+      if RunLastActivityStripHr:
+        hrCmd = LastActivityStripHr(stravaClient, activity)
+      if RunLastActivityAddPoem:
+        quoteCmd = LastActivityAddPoem(stravaClient, quoteClient, activity)
+      if RunLastActivityEquipment:
+        equipmentCmd = LastActivityEquipment(stravaClient, activity)
+
+      cmd.update(hrCmd)
+      cmd.update(quoteCmd)
+      cmd.update(equipmentCmd)
+
+      # If any command keys are present, send the update.
+      if bool(cmd):
+        res = stravaClient.UpdateActivity(activityId, cmd)
+
+        if res.status_code == 200:
+          if bool(hrCmd):
+            print(f"HR hidden for AcivityId {activity['id']}: {activity['name']} @ {activity['start_date_local']}")
+          if bool(quoteCmd):
+            print(f"Quote generated for activity {activity['id']}.")
+          if bool(equipmentCmd):
+            print(f"Gear updated for activity {activity['id']}.")
+        else:
+          if bool(hrCmd):
+            print("Failed to hide HR for AcivityId {activity['id']}: {activity['name']} @ {activity['start_date_local']}")
+          if bool(quoteCmd):
+            print(f"Failed to generate quote for activity {activity['id']}.")
+          if bool(equipmentCmd):
+            print(f"Failed to update gear for activity {activity['id']}.")
+
+      lastActivityUpdatedId = activityId
 
     # Wait for a minute before checking for new data.
     time.sleep(60)
 
-def LastActivityStripHr(client: StravaHttpClient, activity: Any) -> None:
-  hideHr = "{'heartrate_opt_out': true}"
-  res = client.UpdateActivity(activity["id"], hideHr)
+def LastActivityStripHr(client: StravaHttpClient, activity: Any) -> dict[str, str]:
+  return { "heartrate_opt_out": True }
 
-  if res.status_code == 200:
-    print(f"HR hidden for AcivityId {activity['id']}: {activity['name']} @ {activity['start_date_local']}")
-  else:
-    print("Failed to hide HR for AcivityId {activity['id']}: {activity['name']} @ {activity['start_date_local']}")
-
-def LastActivityAddPoem(sClient: StravaHttpClient, qClient: QuoteHttpClient, activity: Any) -> None:
-  if "description" not in activity:
+def LastActivityAddPoem(sClient: StravaHttpClient, qClient: QuoteHttpClient, activity: Any) -> dict[str, str]:
+  if activity["description"] is None:
     # Give it a poem.
     quote = qClient.GetRandomQuote()
     quoteText = f"{quote['content']}\n - {quote['author']}"
-    desc = f"{'description': '{quoteText}'}"
-    res = sClient.UpdateActivity(activity["id"], desc)
+    return { "description": quoteText }
+  return {}
 
-    if res.status_code == 200:
-      print(f"Quote generated for activity {activity['id']}.")
-    else:
-      print(f"Failed to generate quote for activity {activity['id']}.")
-
-def LastActivityEquipment(client: StravaHttpClient, activity: Any) -> None:
+def LastActivityEquipment(client: StravaHttpClient, activity: Any) -> str:
   gearDict = None
 
   try:
@@ -68,13 +84,8 @@ def LastActivityEquipment(client: StravaHttpClient, activity: Any) -> None:
   # If the activity is a type we have default gear for, then we set the gear.
   if activity["sport_type"] in gearDict["sportTypes"]:
     gearId = gearDict["gear"][gearDict["sportTypes"][activity["sport_type"]]]
-    gearMeta = f"{'gear_id': '{gearId}'}"
-    res = client.UpdateActivity(activity["id"], gearMeta)
-
-    if res.status_code == 200:
-      print(f"Gear updated for activity {activity['id']}.")
-    else:
-      print(f"Failed to update gear for activity {activity['id']}.")
+    return { "gear_id": gearId }
+  return {}
 
 if __name__ == "__main__":
   main()
