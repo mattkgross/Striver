@@ -6,6 +6,8 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class StravaHttpClient():
+  """An HTTP client to make requests to the Strava API."""
+
   AuthUrl: str = "https://www.strava.com/oauth/token"
   GetActivityEndpoint: str = "https://www.strava.com/api/v3/activities/"
   GetLastActivityEndpoint: str = "https://www.strava.com/api/v3/athlete/activities"
@@ -59,7 +61,7 @@ class StravaHttpClient():
     """
 
     # If this is a refresh and the expiration time is more than 10 mins away, skip.
-    if refresh and (self.__accessExpirationUtc - round(time.time())) < 600:
+    if refresh and (self.__accessExpirationUtc - round(time.time())) > 600:
       return
 
     payload = {
@@ -97,7 +99,7 @@ class StravaHttpClient():
       params (_Params): The query parameters.
 
     Returns:
-      Any: The HTTP response.
+      Any: The HTTP response parsed as JSON.
     """
     self._Authorize()
 
@@ -105,12 +107,28 @@ class StravaHttpClient():
     return requests.get(url, headers=header, params=params).json()
 
   def _Put(self, url: str, body: dict[str, Any]):
+    """
+    Performs a PUT request to the specified URL with the Strava auth token and specified body.
+
+    Args:
+      url (str): The full API endpoint URL to send the request.
+      body (dict[str, Any]): The request body that will be serialized to JSON.
+
+    Returns:
+      Any: The HTTP response.
+    """
     self._Authorize()
 
     header = {'Authorization': 'Bearer ' + self.__access_token}
     return requests.put(url, headers=header, json=body)
 
   def GetLastActivity(self) -> Any:
+    """
+    Gets the last activity published by the user.
+
+    Returns:
+      JSON representation of the activity.
+    """
     params = {"per_page": 1, 'page': 1}
 
     # Make the API request.
@@ -124,4 +142,14 @@ class StravaHttpClient():
     return self._Get(self.GetActivityEndpoint + str(activity["id"]), params)
 
   def UpdateActivity(self, activityId: int, body: dict[str, Any]) -> Any:
+    """
+    Updates the specified elements of an existing activity.
+
+    Args:
+      activityId (int): The ID of the activity to modify.
+      body (dict[str, Any]): The JSON body containing the keys to update with their values.
+
+    Returns:
+      Any: The HTTP response.
+    """
     return self._Put(self.UpdateActivityEndpoint + str(activityId), body)

@@ -1,4 +1,4 @@
-Strava utilities that I'll be cronning on my home server.
+> *A set of Strava utilities that you can run on a home server.*
 
 # Running
 This is built with python3. No guarantees it'll work on python2.
@@ -28,12 +28,31 @@ This will redirect you back to localahost with a `code` param in the URL. Copy t
 **Remember, once you use a refresh token to generate a new auth/refresh token pair, it's no longer valid. So, if you do this elsewhere outside of this app, you'll need to update it accordingly here with the most recent refresh token. If you don't mess with things anywhere else, you'll be fine - this code will automatically generate and save refresh tokens for you after you've generated the first one.**
 
 # Features
+You can toggle features within `config/feature_switches.py`.
 
 ## Hide Latest Activity Heart Rate
-Monitors incoming activities and hides heart rate data for them.
+Hides your latest activity's heart rate data (you can still see it).
 
 ## Poetry
-Puts a random poetry quote in the latest new activity.
+If your latest activity has no description, fill it with a random quote.
 
 ## Equipment Select
-You specify which type of activity to associate a particular piece of equipment with every time it's uploaded.
+If you specified equipment defaults for activity types, updates your last activity's data accordingly. Map equipment in `config/equipment.json` - you'll need to lookup your gear IDs. It should look something like this:
+
+```
+{
+  "gear":
+  {
+    "hiking_shoes": "g10352053",
+    "road_runners": "g12945572",
+    "trail_runners": "g12776882"
+  },
+  "sportTypes":
+  {
+    "Walk": "hiking_shoes",
+    "Hike": "hiking_shoes",
+    "Run": "road_runners",
+    "TrailRun": "trail_runners"
+  }
+}
+```
