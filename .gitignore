@@ -1,5 +1,5 @@
-# Configs
-config/
+# Secrets
+strava_auth.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

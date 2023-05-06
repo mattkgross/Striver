@@ -1,0 +1,15 @@
+{
+  "gear":
+  {
+    "hiking_shoes": "g10352053",
+    "road_runners": "g12945572",
+    "trail_runners": "g12776882"
+  },
+  "sportTypes":
+  {
+    "Walk": "hiking_shoes",
+    "Hike": "hiking_shoes",
+    "Run": "road_runners",
+    "TrailRun": "trail_runners"
+  }
+}

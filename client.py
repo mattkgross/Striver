@@ -5,7 +5,7 @@ import requests
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# Make sure the
+# Make sure the refresh token in strava_auth.json is current.
 # If you haven't already authorized your app, do so by following this URL:
 # https://www.strava.com/oauth/authorize?client_id=your_client_id&redirect_uri=http://localhost&response_type=code&scope=read_all,profile:read_all,activity:read_all
 class StravaHttpClient():
@@ -108,6 +108,5 @@ class StravaHttpClient():
     # Get the full details.
     return self._Get(self.getActivityEndpoint + str(activity["id"]), params)
 
-  def RemoveHeartRate(self, activityId: int) -> Any:
-    hideHr = "{'heartrate_opt_out': true}"
-    return self._Put(self.updateActivityEndpoint + str(activityId), hideHr)
+  def UpdateActivity(self, activityId: int, metadata: str) -> Any:
+    return self._Put(self.updateActivityEndpoint + str(activityId), metadata)
