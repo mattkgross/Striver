@@ -1,10 +1,8 @@
 import json
 import time
+from clients.quote_client import QuoteHttpClient
+from clients.strava_client import StravaHttpClient
 from typing import *
-
-import requests
-
-from client import StravaHttpClient
 
 ## Functionality Options ##
 RunLastActivityStripHr = True
@@ -13,6 +11,7 @@ RunLastActivityEquipment = True
 
 def main():
   stravaClient: StravaHttpClient = StravaHttpClient()
+  quoteClient: QuoteHttpClient = QuoteHttpClient()
   lastActivityUpdatedId: int = 0
 
   # Run the program indefinitely
@@ -25,7 +24,7 @@ def main():
       if RunLastActivityStripHr:
         LastActivityStripHr(stravaClient, activity)
       if RunLastActivityAddPoem:
-        LastActivityAddPoem(stravaClient, activity)
+        LastActivityAddPoem(quoteClient, activity)
       if RunLastActivityEquipment:
         LastActivityEquipment(stravaClient, activity)
 
@@ -45,10 +44,10 @@ def LastActivityStripHr(client: StravaHttpClient, activity: Any) -> None:
   else:
     print("Failed to hide HR.")
 
-def LastActivityAddPoem(client: StravaHttpClient, activity: Any) -> None:
+def LastActivityAddPoem(client: QuoteHttpClient, activity: Any) -> None:
   if "description" not in activity:
     # Give it a poem.
-    pass
+    print(client.GetRandomQuote())
 
 def LastActivityEquipment(client: StravaHttpClient, activity: Any) -> None:
   gearDict = None
