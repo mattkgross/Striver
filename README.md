@@ -1,6 +1,42 @@
 > *A set of Strava utilities that you can run on a home server.*
 
-# Running
+# Features
+You can toggle features within `config/feature_switches.py`.
+
+## Hide Latest Activity Heart Rate
+Hides your latest activity's heart rate data (you can still see it).
+
+## Poetry
+If your latest activity has no description, fill it with a random quote.
+
+## Equipment Select
+If you specified equipment defaults for activity types, updates your last activity's data accordingly.
+
+Map equipment in `config/equipment.py` - you'll need to lookup your gear IDs. It should look something like this:
+
+```
+EquipmentMap = {
+  "gear":
+  {
+    "hiking_shoes": "g10352053",
+    "road_runners": "g12945572",
+    "trail_runners": "g12776882"
+  },
+  "sportTypes":
+  {
+    "Walk": "hiking_shoes",
+    "Hike": "hiking_shoes",
+    "Run": "road_runners",
+    "TrailRun": "trail_runners"
+  }
+}
+```
+
+Give each of your gear an nickname as it's key in `gear`. Then, specify which piece of gear should be the default for a particular activity sport type in `sportTypes`.
+
+# Setup
+
+## Running
 This is built with python3. No guarantees it'll work on python2.
 
 ```
@@ -60,37 +96,3 @@ To restart the service after making changes, run : `sudo systemctl restart striv
 To check server logs, run: `tail striver.log -n 50`
 
 To check systemctl logs, run: `sudo journalctl -u striver.service -n 50`
-
-# Features
-You can toggle features within `config/feature_switches.py`.
-
-## Hide Latest Activity Heart Rate
-Hides your latest activity's heart rate data (you can still see it).
-
-## Poetry
-If your latest activity has no description, fill it with a random quote.
-
-## Equipment Select
-If you specified equipment defaults for activity types, updates your last activity's data accordingly.
-
-Map equipment in `config/equipment.py` - you'll need to lookup your gear IDs. It should look something like this:
-
-```
-EquipmentMap = {
-  "gear":
-  {
-    "hiking_shoes": "g10352053",
-    "road_runners": "g12945572",
-    "trail_runners": "g12776882"
-  },
-  "sportTypes":
-  {
-    "Walk": "hiking_shoes",
-    "Hike": "hiking_shoes",
-    "Run": "road_runners",
-    "TrailRun": "trail_runners"
-  }
-}
-```
-
-Give each of your gear an nickname as it's key in `gear`. Then, specify which piece of gear should be the default for a particular activity sport type in `sportTypes`.
