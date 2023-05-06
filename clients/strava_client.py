@@ -75,7 +75,7 @@ class StravaHttpClient():
       'f': 'json'
     }
 
-    _logger.info("Requesting Auth Token...")
+    _logger.debug("Requesting Auth Token...")
     res = requests.post(self.__AUTH_URL, data=payload, verify=False).json()
 
     try:
@@ -89,7 +89,7 @@ class StravaHttpClient():
       # Force a retry on the next call.
       self.__accessExpirationUtc = 0
     else:
-      _logger.info ("Auth token acquired.")
+      _logger.debug ("Auth token acquired.")
       _logger.debug (self.__access_token)
 
   def _Get(self, url: str, params) -> Any:
