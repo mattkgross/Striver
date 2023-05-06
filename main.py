@@ -24,7 +24,7 @@ def main():
       if RunLastActivityStripHr:
         LastActivityStripHr(stravaClient, activity)
       if RunLastActivityAddPoem:
-        LastActivityAddPoem(quoteClient, activity)
+        LastActivityAddPoem(stravaClient, quoteClient, activity)
       if RunLastActivityEquipment:
         LastActivityEquipment(stravaClient, activity)
 
@@ -34,20 +34,26 @@ def main():
     time.sleep(60)
 
 def LastActivityStripHr(client: StravaHttpClient, activity: Any) -> None:
-  print(f"Removing HR data from AcivityId {activity['id']}")
-  print(f"{activity['name']} @ {activity['start_date_local']}")
   hideHr = "{'heartrate_opt_out': true}"
   res = client.UpdateActivity(activity["id"], hideHr)
 
   if res.status_code == 200:
-    print("HR hidden.")
+    print(f"HR hidden for AcivityId {activity['id']}: {activity['name']} @ {activity['start_date_local']}")
   else:
-    print("Failed to hide HR.")
+    print("Failed to hide HR for AcivityId {activity['id']}: {activity['name']} @ {activity['start_date_local']}")
 
-def LastActivityAddPoem(client: QuoteHttpClient, activity: Any) -> None:
+def LastActivityAddPoem(sClient: StravaHttpClient, qClient: QuoteHttpClient, activity: Any) -> None:
   if "description" not in activity:
     # Give it a poem.
-    print(client.GetRandomQuote())
+    quote = qClient.GetRandomQuote()
+    quoteText = f"{quote['content']}\n - {quote['author']}"
+    desc = f"{'description': '{quoteText}'}"
+    res = sClient.UpdateActivity(activity["id"], desc)
+
+    if res.status_code == 200:
+      print(f"Quote generated for activity {activity['id']}.")
+    else:
+      print(f"Failed to generate quote for activity {activity['id']}.")
 
 def LastActivityEquipment(client: StravaHttpClient, activity: Any) -> None:
   gearDict = None
