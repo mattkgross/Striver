@@ -2,19 +2,15 @@ import json
 import time
 from clients.quote_client import QuoteHttpClient
 from clients.strava_client import StravaHttpClient
+from feature_switches import *
 from typing import *
-
-## Functionality Options ##
-RunLastActivityStripHr = True
-RunLastActivityAddPoem = True
-RunLastActivityEquipment = True
 
 def main():
   stravaClient: StravaHttpClient = StravaHttpClient()
   quoteClient: QuoteHttpClient = QuoteHttpClient()
   lastActivityUpdatedId: int = 0
 
-  # Run the program indefinitely
+  # Run the program indefinitely.
   while True:
     activity: Any = stravaClient.GetLastActivity()
     activityId: int = activity["id"]
@@ -25,10 +21,10 @@ def main():
       equipmentCmd = {}
       cmd = {}
 
-      if RunLastActivityStripHr:
+      if RunLastActivityHideHr:
         hrCmd = LastActivityStripHr(stravaClient, activity)
-      if RunLastActivityAddPoem:
-        quoteCmd = LastActivityAddPoem(stravaClient, quoteClient, activity)
+      if RunLastActivityAddQuote:
+        quoteCmd = LastActivityAddQuote(stravaClient, quoteClient, activity)
       if RunLastActivityEquipment:
         equipmentCmd = LastActivityEquipment(stravaClient, activity)
 
@@ -63,9 +59,8 @@ def main():
 def LastActivityStripHr(client: StravaHttpClient, activity: Any) -> dict[str, str]:
   return { "heartrate_opt_out": True }
 
-def LastActivityAddPoem(sClient: StravaHttpClient, qClient: QuoteHttpClient, activity: Any) -> dict[str, str]:
+def LastActivityAddQuote(sClient: StravaHttpClient, qClient: QuoteHttpClient, activity: Any) -> dict[str, str]:
   if activity["description"] is None:
-    # Give it a poem.
     quote = qClient.GetRandomQuote()
     quoteText = f"{quote['content']}\n - {quote['author']}"
     return { "description": quoteText }

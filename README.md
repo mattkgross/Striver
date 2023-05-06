@@ -29,19 +29,11 @@ This will redirect you back to localahost with a `code` param in the URL. Copy t
 
 # Features
 
-## Heart Rate
-Functionality around heart rate data in Strava.
-
-### Hide Latest Activity Heart Rate
+## Hide Latest Activity Heart Rate
 Monitors incoming activities and hides heart rate data for them.
 
-## Text
-Functionality around activity text in Strava.
-
-### Poetry
+## Poetry
 Puts a random poetry quote in the latest new activity.
 
-## Equipment
-
-### Shoe Select
+## Equipment Select
 You specify which type of activity to associate a particular piece of equipment with every time it's uploaded.
