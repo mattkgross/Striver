@@ -32,7 +32,7 @@ EquipmentMap = {
 }
 ```
 
-Give each of your gear an nickname as it's key in `gear`. Then, specify which piece of gear should be the default for a particular activity sport type in `sportTypes`.
+Give each of your gear a nickname as its key in `gear`. Then, specify which piece of gear should be the default for a particular activity sport type in `sportTypes`.
 
 # Setup
 
@@ -44,7 +44,7 @@ python3 src/main.py
 ```
 
 ## Secrets
-You'll need to create a file under the `config` directory named `strava_auth.json`. Its contents should look as follows:
+You'll need to create a file under the `src/config` directory named `strava_auth.json`. Its contents should look as follows:
 
 ```
 {
@@ -92,6 +92,6 @@ To check the service status at any time, run: `sudo systemctl status striver.ser
 To restart the service after making changes, run : `sudo systemctl restart striver.service`
 
 ## Logs
-To check server logs, run: `tail src/striver.log -n 50`
+To check server logs, run: `tail striver.log -n 50`
 
 To check systemctl logs, run: `sudo journalctl -u striver.service -n 50`
