@@ -37,10 +37,10 @@ Give each of your gear an nickname as it's key in `gear`. Then, specify which pi
 # Setup
 
 ## Running
-This is built with python3. No guarantees it'll work on python2.
+This is built with python3. No guarantees it'll work on python2. Be sure to run things from the parent directory of the repository.
 
 ```
-python3 main.py
+python3 src/main.py
 ```
 
 ## Secrets
