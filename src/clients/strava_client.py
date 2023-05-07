@@ -76,9 +76,9 @@ class StravaHttpClient():
     }
 
     _logger.debug("Requesting Auth Token...")
-    res = requests.post(self.__AUTH_URL, data=payload, verify=False).json()
 
     try:
+      res = requests.post(self.__AUTH_URL, data=payload, verify=False).json()
       self.__access_token = res["access_token"]
       self.__accessExpirationUtc = res["expires_at"]
       self.__refreshToken = res["refresh_token"]
