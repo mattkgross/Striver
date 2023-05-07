@@ -17,21 +17,27 @@ def main():
   quoteClient: QuoteHttpClient = QuoteHttpClient()
   lastActivityUpdatedId: int = 0
 
+  # TODO: Consider webhooks if we're constantly exceeding API limits: https://developers.strava.com/docs/webhooks/
   # Run the program indefinitely.
   while True:
-    activity: Any = stravaClient.GetLastActivity()
+    lastActivityId = stravaClient.GetLastActivityId()
 
-    if activity is None:
-      _logger.warning("No activity was found. Skipping...")
+    if lastActivityId == 0:
+      _logger.warning("No activity ID was found. Skipping...")
       time.sleep(60)
       continue
 
-    activityId = activity["id"]
-
     # Perform operations on the last activity registered.
-    if activityId != lastActivityUpdatedId:
+    if lastActivityId != lastActivityUpdatedId:
+      activity = stravaClient.GetActivity(lastActivityId)
+
+      if activity is None:
+        _logger.warning("No activity was found. Skipping...")
+        time.sleep(60)
+        continue
+
       UpdateLastActivity(activity, stravaClient, quoteClient)
-      lastActivityUpdatedId = activityId
+      lastActivityUpdatedId = lastActivityId
 
     # Wait for a minute before checking for new data.
     time.sleep(60)

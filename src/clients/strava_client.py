@@ -32,7 +32,7 @@ class StravaHttpClient():
     """Loads the `config/strava_auth.json` file into memory."""
 
     try:
-      with open("config/strava_auth.json", "r") as creds:
+      with open("src/config/strava_auth.json", "r") as creds:
         self.__config = json.load(creds)
         self.__clientId = self.__config["clientId"]
         self.__clientSecret = self.__config["clientSecret"]
@@ -48,7 +48,7 @@ class StravaHttpClient():
 
     try:
       self.__config["refreshToken"] = self.__refreshToken
-      with open("config/strava_auth.json", "w") as creds:
+      with open("src/config/strava_auth.json", "w") as creds:
         json.dump(self.__config, creds)
     except Exception as e:
       _logger.warning("Failed to write refresh token!")
@@ -106,7 +106,13 @@ class StravaHttpClient():
     self._Authorize()
 
     header = {'Authorization': 'Bearer ' + self.__access_token}
-    return requests.get(url, headers=header, params=params).json()
+    res = requests.get(url, headers=header, params=params)
+
+    if res.status_code == 429:
+      _logger.error("Rate limit hit.")
+      return None
+
+    return res.json()
 
   def _Put(self, url: str, body: dict[str, Any]):
     """
@@ -122,14 +128,19 @@ class StravaHttpClient():
     self._Authorize()
 
     header = {'Authorization': 'Bearer ' + self.__access_token}
-    return requests.put(url, headers=header, json=body)
+    res = requests.put(url, headers=header, json=body)
 
-  def GetLastActivity(self) -> Any:
+    if res.status_code == 429:
+      _logger.error("Rate limit hit.")
+
+    return res
+
+  def GetLastActivityId(self) -> int:
     """
     Gets the last activity published by the user.
 
     Returns:
-      JSON representation of the activity.
+      The ID of the last published activity. 0 if unsuccessful.
     """
     params = {"per_page": 1, 'page': 1}
 
@@ -138,10 +149,22 @@ class StravaHttpClient():
     activity = activities[0] if activities else None
 
     if activity is None:
-      return None
+      return 0
 
-    # Get the full details.
-    return self._Get(self.__GET_ACTIVITY_URL + str(activity["id"]), params)
+    return activity["id"] if "id" in activity else 0
+
+  def GetActivity(self, activityId: int) -> Any:
+    """
+    Gets the full details of an activity.
+
+    Args:
+      activityId (int): The ID of the activity to lookup.
+
+    Returns:
+      JSON representation of the activity.
+    """
+
+    return self._Get(self.__GET_ACTIVITY_URL + str(activityId))
 
   def UpdateActivity(self, activityId: int, body: dict[str, Any]) -> Any:
     """
