@@ -163,8 +163,8 @@ class StravaHttpClient():
     Returns:
       JSON representation of the activity.
     """
-
-    return self._Get(self.__GET_ACTIVITY_URL + str(activityId))
+    params = {"per_page": 1, 'page': 1}
+    return self._Get(self.__GET_ACTIVITY_URL + str(activityId), params)
 
   def UpdateActivity(self, activityId: int, body: dict[str, Any]) -> Any:
     """
