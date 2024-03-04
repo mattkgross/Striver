@@ -77,7 +77,7 @@ After=network.target
 ExecStart=/usr/bin/python3 /path/to/repo/src/main.py
 WorkingDirectory=/path/to/repo
 Restart=always
-RestartSec=60
+RestartSec=120
 User=<your_username>
 
 [Install]
