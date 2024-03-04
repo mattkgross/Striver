@@ -24,7 +24,7 @@ def main():
 
     if lastActivityId == 0:
       _logger.warning("No activity ID was found. Skipping...")
-      time.sleep(60)
+      time.sleep(120)
       continue
 
     # Perform operations on the last activity registered.
@@ -33,14 +33,14 @@ def main():
 
       if activity is None:
         _logger.warning("No activity was found. Skipping...")
-        time.sleep(60)
+        time.sleep(120)
         continue
 
       UpdateLastActivity(activity, stravaClient, quoteClient)
       lastActivityUpdatedId = lastActivityId
 
-    # Wait for a minute before checking for new data.
-    time.sleep(60)
+    # Wait for 2 minutes before checking for new data.
+    time.sleep(120)
 
 def UpdateLastActivity(activity: Any, stravaClient: StravaHttpClient, quoteClient: QuoteHttpClient) -> int:
   hrCmd: dict[str, str] = {}
