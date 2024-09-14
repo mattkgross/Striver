@@ -4,7 +4,7 @@ from typing import *
 # https://github.com/lukePeavey/quotable
 class QuoteHttpClient():
   """An HTTP client to make requests to the Quotable API."""
-  __API_URL = "https://api.quotable.io/quotes/random"
+  __API_URL = "http://api.quotable.io/quotes/random"
 
   def __init__(self) -> None:
     pass
